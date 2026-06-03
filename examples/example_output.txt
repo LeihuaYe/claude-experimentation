@@ -1,0 +1,33 @@
+======================================================================
+[1] SAMPLE RATIO MISMATCH (randomization sanity gate)
+======================================================================
+  control=15,019   treatment=14,981
+  chi2=0.048  p=0.8263  (alpha=0.001)  ->  PASS — randomization looks valid
+
+======================================================================
+[2] CUPED VARIANCE REDUCTION
+======================================================================
+  covariate=pre_revenue  corr=+0.599  variance reduction=35.9%  (=> CI ~20% narrower, same users)
+
+======================================================================
+[3] PRIMARY EFFECT
+======================================================================
+  raw    abs=+0.1719  rel=+1.73%  95% CI [+0.0586, +0.2853]  p=0.0029
+  CUPED  abs=+0.1678  rel=+1.68%  95% CI [+0.0770, +0.2585]  p=0.0003
+
+======================================================================
+[4] METRIC PANEL + BENJAMINI-HOCHBERG FDR (alpha=0.05)
+======================================================================
+  revenue           [primary  ] effect=+0.1678  rel=+1.68%  p=0.0003  q<=0.0100  <-- discovery
+  engagement_min    [secondary] effect=+0.1884  rel=+0.95%  p=0.0423  q<=0.0200
+  support_tickets   [guardrail] effect=+0.0207  rel=+6.94%  p=0.0735  q<=0.0300
+  conversion        [secondary] effect=+0.0022  rel=+2.18%  p=0.5303  q<=0.0400
+  latency_ms        [guardrail] effect=+0.2695  rel=+0.11%  p=0.5615  q<=0.0500
+
+======================================================================
+[5] VERDICT
+======================================================================
+  - SRM: PASS
+  - Significant after BH correction: revenue
+  - Guardrails: clean
+  - RECOMMENDATION: SHIP
