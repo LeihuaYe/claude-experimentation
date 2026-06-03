@@ -1,21 +1,19 @@
-# claude-experimentation — project context
+# claude-experimentation — contributor notes
 
-Public OSS Claude Code skill(s) for trustworthy experiment analysis. First skill: `ab-readout`. This is the COI-clean **OSS-reputation** lane (free MIT, no monetization) — positioning/credibility for Leihua's causal-inference/experimentation expertise, distributed via his Medium/LinkedIn audience. See `~/.claude/.../memory/reference_cc_profit_replication_analysis.md` for the strategy and the latent monetization path.
+A small, dependency-light toolkit for trustworthy experiment analysis, usable as a Claude Code skill or a plain Python library. First skill: `ab-readout`.
 
 ## Layout
-- `ab_readout/` — the library (`readout.py` = SRM/CUPED/effect/BH/verdict; `cli.py`; `__main__.py`).
+- `ab_readout/` — the library. `readout.py` is the pipeline (SRM → CUPED → effect+CI → Benjamini-Hochberg → verdict); `cli.py` / `__main__.py` is the `python -m ab_readout` entrypoint.
 - `SKILL.md` — the Claude Code skill definition (drop into `~/.claude/skills/ab-readout/`).
-- `examples/make_synthetic.py` — synthetic data with known ground truth; `example_output.txt` committed.
-- `tests/test_readout.py` — validates the stats against ground truth (run: `python tests/test_readout.py`).
+- `examples/make_synthetic.py` — synthetic data with a known ground truth; `example_output.txt` is the committed demo.
+- `tests/test_readout.py` — validates the statistics against that ground truth.
 
 ## Conventions
-- Stats must be correct first (Leihua is a PhD experimentation lead — wrong stats kill the credibility play). Every method is checked against a simulation with a known answer; keep it that way.
-- Dependency-light (numpy/scipy/pandas only). No heavy frameworks.
-- Match existing code density; no speculative abstractions.
+- **Correctness first.** Every method is checked against a simulation with a known answer (`python tests/test_readout.py`). If you add a method, add a ground-truth test for it — plausible-looking stats are not enough.
+- **Dependency-light.** numpy / scipy / pandas only; no heavy frameworks.
+- Keep functions small and readable; prefer a few clear lines over premature abstraction.
 
-## Status
-- Built 2026-06-02 from the validated inline prototype. Repo created PRIVATE — **public launch is a separate, explicit decision** (the OSS-reputation payoff requires going public + a launch post, but that's Leihua's call, not automatic).
-- Launch plan when ready: flip public → Medium/LinkedIn post demoing it end-to-end (data + code, per his content rule) → drives stars/credibility.
+## Roadmap
+`ab-readout` is the first skill. Planned: experiment **design** (power / MDE / switchback), **sequential / always-valid** inference, and **heterogeneous effects** (CATE).
 
-## Sunset criterion (per skill-sunset-at-creation rule)
-Re-evaluate at the **2026-08-05 quarterly skill audit**: keep only if it has been (a) launched publicly and gained traction (stars / inbound / cited in a post), OR (b) used by Leihua in real readouts ≥1×/month. If neither by the following quarter (Nov 5), archive — a private repo that never launched isn't earning the reputation payoff it was built for.
+Contributions welcome — open an issue or PR.
