@@ -1,8 +1,11 @@
 # claude-experimentation
 
-Trustworthy experiment analysis as a Claude Code skill (and a small, dependency-light Python library). Point it at an A/B test and it runs the readout the way a careful data scientist would — **as a pipeline of gates, not a single p-value.**
+Trustworthy experiment analysis as Claude Code skills (and small, dependency-light Python libraries) — covering an experiment end to end:
 
-> A statistically significant result on a broken experiment is worse than no result. This skill checks the experiment *before* it reads the effect.
+- **`ab-design`** — size it *before* it runs: sample size / MDE / power / duration, with CUPED, clustering, ratio metrics, and multiple-metric alpha.
+- **`ab-readout`** — read it out *after* it runs, **as a pipeline of gates, not a single p-value.**
+
+> Most experiments are lost before they start (underpowered) or misread when they end (a significant result on a broken test). These skills check the experiment at both ends.
 
 ## Why this exists
 
@@ -68,6 +71,30 @@ print(format_report(res))   # or use res (a dict) programmatically
 
 Full output in [`examples/example_output.txt`](examples/example_output.txt).
 
+## Design the experiment first (`ab-design`)
+
+A readout is only trustworthy if the test was powered. `ab-design` sizes it before launch — sample size, MDE, power, and duration are one quadrilateral; fix any three and it computes the fourth.
+
+```bash
+# how many users to detect a 0.1 lift on a mean metric, with a CUPED covariate?
+python -m ab_design --kind mean --baseline 10 --sd 5 --mde 0.1 --rho 0.6 --daily 8000
+
+# proportion metric, clustered randomization, 3 primary metrics
+python -m ab_design --kind proportion --baseline 0.10 --mde 0.02 \
+  --cluster-size 12 --icc 0.05 --k-primary 3
+```
+
+```python
+from ab_design import sample_size, mde, format_design_report
+
+res = sample_size("mean", baseline=10, mde=0.1, sd=5, rho=0.6)   # CUPED cuts n by 1-rho^2
+print(format_design_report(res, daily_users_per_arm=8000))
+
+mde("proportion", baseline=0.10, n=20000)   # inverse: what can I detect with the traffic I have?
+```
+
+It handles the design realities that actually move required n: **CUPED** (covariate cuts n by `1−ρ²`), **clustered randomization** (design effect `1+(m−1)·ICC`), **ratio metrics** (delta-method variance), and **multiple primary metrics** (alpha allocation). Validated against Monte-Carlo power — `python tests/test_design.py` (12/12). Hand the result to `ab-readout` at the pre-registered n.
+
 ## The stats are checked, not just plausible
 
 The methods are validated against a simulation with a **known ground truth** — see [`tests/test_readout.py`](tests/test_readout.py): CUPED variance reduction lands near ρ², the primary CI covers the true effect, BH demotes the true nulls, SRM catches a real imbalance.
@@ -85,7 +112,7 @@ python tests/test_readout.py    # 8/8 passed
 
 ## Roadmap
 
-`ab-readout` is the first skill. Planned: experiment **design** (power / MDE / switchback), **sequential / always-valid** inference, and **heterogeneous effects** (CATE).
+`ab-design` and `ab-readout` ship today. Planned: **sequential / always-valid** inference (peeking-safe stopping), **heterogeneous effects** (CATE / meta-learners), and **causal inference without randomization** (DiD / synthetic control).
 
 ## License
 
