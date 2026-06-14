@@ -4,6 +4,7 @@ Trustworthy experiment analysis as Claude Code skills (and small, dependency-lig
 
 - **`ab-design`** — size it *before* it runs: sample size / MDE / power / duration, with CUPED, clustering, ratio metrics, and multiple-metric alpha.
 - **`ab-readout`** — read it out *after* it runs, **as a pipeline of gates, not a single p-value.**
+- **`ab-cate`** — go *beyond the average*: heterogeneous effects (S/T/X-learners), regression-adjusted ATE, and a subgroup-fishing guard so segment stories aren't false positives.
 
 > Most experiments are lost before they start (underpowered) or misread when they end (a significant result on a broken test). These skills check the experiment at both ends.
 
@@ -95,6 +96,25 @@ mde("proportion", baseline=0.10, n=20000)   # inverse: what can I detect with th
 
 It handles the design realities that actually move required n: **CUPED** (covariate cuts n by `1−ρ²`), **clustered randomization** (design effect `1+(m−1)·ICC`), **ratio metrics** (delta-method variance), and **multiple primary metrics** (alpha allocation). Validated against Monte-Carlo power — `python tests/test_design.py` (12/12). Hand the result to `ab-readout` at the pre-registered n.
 
+## Go beyond the average effect (`ab-cate`)
+
+The ATE hides the story — and slicing by segment until something turns green is how analysts fool themselves. `ab-cate` estimates *how* the effect varies and guards against fished subgroups.
+
+```bash
+python -m ab_cate --data exp.csv --arm group --outcome revenue \
+  --covariates pre_revenue,tenure_days --learner x --subgroup-col country
+```
+
+```python
+from ab_cate import lin_estimator, x_learner, subgroup_fishing_guard, cate_summary
+
+lin = lin_estimator(X, T, Y)                 # regression-adjusted ATE + variance reduction (CUPED's cousin)
+summ = cate_summary(x_learner(X, T, Y), X)   # CATE spread: is there real heterogeneity?
+guard = subgroup_fishing_guard(T, Y, {"power_users": mask_a, "new_users": mask_b})
+```
+
+It gives the **regression-adjusted ATE** (Lin's estimator — unbiased *and* lower-variance), **S/T/X-learner** CATE estimates, **honest** (sample-split) estimation, and a **subgroup-fishing guard** that Benjamini-Hochberg-corrects across every slice you tried — so "it worked better for X" has to survive the correction. Validated against known heterogeneity — `python tests/test_cate.py` (9/9).
+
 ## The stats are checked, not just plausible
 
 The methods are validated against a simulation with a **known ground truth** — see [`tests/test_readout.py`](tests/test_readout.py): CUPED variance reduction lands near ρ², the primary CI covers the true effect, BH demotes the true nulls, SRM catches a real imbalance.
@@ -112,7 +132,7 @@ python tests/test_readout.py    # 8/8 passed
 
 ## Roadmap
 
-`ab-design` and `ab-readout` ship today. Planned: **sequential / always-valid** inference (peeking-safe stopping), **heterogeneous effects** (CATE / meta-learners), and **causal inference without randomization** (DiD / synthetic control).
+`ab-design`, `ab-readout`, and `ab-cate` ship today. Planned: **sequential / always-valid** inference (peeking-safe stopping) and **causal inference without randomization** (DiD / synthetic control).
 
 ## License
 
